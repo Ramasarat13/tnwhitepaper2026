@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Tamil Nadu State Finances explained simply — an interactive dashboard built from the official White Paper on State Finances, June 2026." />
+<title>Where Did Your Money Go? — Tamil Nadu's Finances Explained</title>
+<style>
+  :root{
+    --bg:#FFFFFF;
+    --bg-alt:#F4F6F8;
+    --card:#FFFFFF;
+    --card-2:#F1F3F6;
+    --text:#15181D;
+    --muted:#5B6573;
+    --accent:#FF6B35;          /* urgent orange */
+    --accent-text:#C2461A;     /* darker orange for small text (AA on white) */
+    --accent-soft:rgba(255,107,53,.10);
+    --gold:#B45309;            /* readable amber for highlighted numbers */
+    --green:#15803D;
+    --danger:#DC2626;
+    --neutral:#94A3B8;
+    --line:#E3E7EC;
+    --radius:16px;
+    --maxw:1100px;
+    --shadow:0 6px 22px rgba(20,30,50,.08);
+    --navh:60px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;max-width:100%;overflow-x:hidden}
+  html{scroll-behavior:smooth;scroll-padding-top:calc(var(--navh) + 12px)}
+  body{
+    background:var(--bg);color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6;-webkit-font-smoothing:antialiased;font-size:16px;
+  }
+  h1,h2,h3{line-height:1.2;margin:0 0 .4em}
+  h2{font-size:1.55rem;letter-spacing:-.01em}
+  h3{font-size:1.15rem}
+  p{margin:0 0 1em}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 18px}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+
+  /* ---------- NAV ---------- */
+  header.nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);
+    backdrop-filter:saturate(140%) blur(10px);border-bottom:1px solid var(--line)}
+  .nav-inner{display:flex;align-items:center;gap:10px;max-width:var(--maxw);margin:0 auto;padding:9px 14px;min-height:var(--navh)}
+  .brand{font-weight:800;font-size:.92rem;white-space:nowrap;color:var(--text);flex:0 0 auto}
+  .brand .dot{color:var(--accent)}
+  .lang-toggle{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;flex:0 0 auto}
+  .lang-toggle button{background:transparent;border:0;color:var(--muted);font-size:.78rem;font-weight:700;
+    padding:7px 11px;cursor:pointer;min-height:36px;font-family:inherit}
+  .lang-toggle button.active{background:var(--accent);color:#fff}
+  .navlinks{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:2px;margin-left:auto}
+  .navlinks::-webkit-scrollbar{display:none}
+  .navlinks a{flex:0 0 auto;color:var(--muted);text-decoration:none;font-size:.8rem;padding:8px 11px;
+    border-radius:999px;border:1px solid var(--line);min-height:36px;display:inline-flex;align-items:center;white-space:nowrap}
+  .navlinks a:hover,.navlinks a:focus-visible,.navlinks a.active{color:#fff;background:var(--accent);border-color:var(--accent);outline:none}
+
+  /* ---------- SECTIONS ---------- */
+  section{padding:52px 0;border-bottom:1px solid var(--line);scroll-margin-top:calc(var(--navh) + 8px)}
+  section:nth-of-type(even){background:var(--bg-alt)}
+  section:last-of-type{border-bottom:none}
+  .eyebrow{color:var(--accent-text);font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:.72rem;margin-bottom:8px}
+  .lead{color:var(--muted);font-size:1.02rem;max-width:62ch}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);position:relative}
+  .num{color:var(--gold);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+
+  /* ---------- SHARE BUTTON ---------- */
+  .share-btn{position:absolute;top:12px;right:12px;z-index:3;display:inline-flex;align-items:center;justify-content:center;
+    gap:5px;background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:999px;
+    min-width:38px;height:34px;padding:0 10px;font-size:.74rem;font-weight:700;cursor:pointer;font-family:inherit}
+  .share-btn:hover,.share-btn:focus-visible{border-color:var(--accent);color:var(--accent-text);outline:none}
+  .share-btn svg{width:14px;height:14px}
+
+  /* ---------- HERO ---------- */
+  #hero{padding-top:42px}
+  .hero-h1{font-size:clamp(2.1rem,8vw,3.4rem);font-weight:800;letter-spacing:-.02em;margin-bottom:.15em}
+  .hero-h1 .hl{color:var(--accent)}
+  .hero-sub{color:var(--muted);font-size:1.1rem;margin-bottom:26px}
+  .hero-stats{display:grid;gap:14px;grid-template-columns:1fr}
+  .stat{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);
+    border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);opacity:0;transform:translateY(14px);position:relative}
+  .stat.in{opacity:1;transform:none;transition:opacity .6s ease,transform .6s ease}
+  .stat .big{font-size:clamp(1.9rem,7vw,2.6rem);font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums;line-height:1.05}
+  .stat .label{font-weight:700;margin-top:4px;font-size:.98rem;padding-right:46px}
+  .stat .exp{color:var(--muted);font-size:.86rem;margin-top:6px}
+  .stat:nth-child(2){border-left-color:var(--gold)}
+  .stat:nth-child(3){border-left-color:var(--danger)}
+
+  /* ---------- CHART ---------- */
+  .chartcard{margin-top:22px}
+  .chart-title{font-weight:700;font-size:1.05rem;margin-bottom:2px}
+  .chart-sub{color:var(--muted);font-size:.85rem;margin-bottom:14px}
+  .chart-box{position:relative;width:100%;height:320px}
+  @media(min-width:640px){.chart-box{height:380px}}
+  .annot{display:flex;gap:10px;align-items:flex-start;background:var(--accent-soft);border:1px solid rgba(255,107,53,.35);
+    border-radius:12px;padding:10px 12px;margin-top:14px;font-size:.88rem}
+  .annot .i{color:var(--accent-text);font-weight:800;flex:0 0 auto}
+
+  /* ---------- PERSONALIZER ---------- */
+  .pz-inputs{display:grid;gap:12px;grid-template-columns:1fr;margin:18px 0}
+  @media(min-width:620px){.pz-inputs{grid-template-columns:1fr 1fr}}
+  .pz-inputs.pz-inputs-single{grid-template-columns:1fr;max-width:380px}
+  .pz-field label{display:block;font-size:.82rem;font-weight:700;margin-bottom:6px;color:var(--muted)}
+  .pz-field select{width:100%;background:var(--card);color:var(--text);border:1px solid var(--line);
+    border-radius:12px;padding:13px 12px;font-size:.95rem;min-height:48px;font-family:inherit;
+    appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235B6573' stroke-width='3'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 14px center}
+  .pz-field select:focus-visible{outline:none;border-color:var(--accent)}
+  .pz-result{display:grid;gap:12px}
+  .pz-stmt{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);
+    border-radius:12px;padding:14px 16px;font-size:.92rem;opacity:0;transform:translateY(8px);box-shadow:var(--shadow)}
+  .pz-stmt.show{opacity:1;transform:none;transition:opacity .45s ease,transform .45s ease}
+  .pz-stmt b{color:var(--gold)}
+  .pz-note{font-size:.78rem;color:var(--muted);margin-top:10px;font-style:italic}
+
+  /* ---------- GOOD vs BAD DEBT ---------- */
+  .flow{display:grid;gap:16px;grid-template-columns:1fr;position:relative;margin-top:20px}
+  @media(min-width:860px){.flow{grid-template-columns:repeat(3,1fr)}}
+  .panel{background:var(--card);border:1px solid var(--line);border-top:5px solid var(--pc);border-radius:var(--radius);
+    padding:20px;box-shadow:var(--shadow);text-align:center;position:relative;overflow:hidden}
+  .panel .pico{font-size:2.4rem;line-height:1}
+  .panel .plabel{font-weight:800;margin-top:8px;color:var(--pc);font-size:1.05rem}
+  .panel .pex{font-size:.9rem;margin-top:6px}
+  .panel .psub{font-size:.82rem;color:var(--muted);margin-top:8px}
+  .panel .pstep{position:absolute;top:10px;left:12px;font-size:.72rem;font-weight:800;color:var(--muted);opacity:.6}
+  .coin-flow{position:absolute;top:8px;font-size:1.3rem;pointer-events:none;will-change:transform;
+    animation:coinmove 6s linear infinite}
+  @keyframes coinmove{0%{left:2%;opacity:0}8%{opacity:1}92%{opacity:1}100%{left:96%;opacity:0}}
+  .flow-callout{margin-top:18px;background:#fff4ef;border:1px solid rgba(255,107,53,.4);border-left:5px solid var(--accent);
+    border-radius:var(--radius);padding:16px 18px;font-size:.92rem}
+  .flow-callout b{color:var(--accent-text)}
+
+  /* ---------- RUPEE ---------- */
+  .rupee-grid{display:grid;gap:20px;grid-template-columns:1fr}
+  @media(min-width:820px){.rupee-grid{grid-template-columns:minmax(280px,1fr) 1fr;align-items:center}}
+  .rupee-chart-box{position:relative;width:100%;max-width:360px;margin:0 auto;height:300px}
+  .coin-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:96px;height:96px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#FFE27A,#F3B33D 55%,#C9871A);border:3px solid #E0A52E;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;
+    box-shadow:0 4px 14px rgba(180,120,20,.35),inset 0 2px 6px rgba(255,255,255,.5);z-index:2}
+  .coin-center .rs{font-size:2rem;font-weight:900;color:#5a3c00;line-height:1}
+  .coin-center .cl{font-size:.58rem;font-weight:700;color:#6b4a08;letter-spacing:.05em;margin-top:1px}
+  .coininfo{text-align:center;margin-top:-6px;color:var(--muted);font-size:.82rem}
+  .segpanel{background:var(--card-2);border:1px solid var(--line);border-radius:var(--radius);padding:16px;min-height:150px}
+  .segpanel .tag{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:8px;vertical-align:middle}
+  .segpanel .pct{font-size:1.7rem;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums}
+  .segpanel .nm{font-weight:700;font-size:1.05rem}
+  .segpanel .ds{color:var(--muted);font-size:.9rem;margin-top:6px}
+  .seglist{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .segbtn{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);color:var(--text);
+    border-radius:999px;padding:8px 12px;font-size:.8rem;cursor:pointer;min-height:40px;font-family:inherit}
+  .segbtn:hover,.segbtn:focus-visible,.segbtn.active{border-color:var(--accent);outline:none}
+  .segbtn .sw{width:11px;height:11px;border-radius:3px;flex:0 0 auto}
+  .bigcallout{margin-top:22px;background:#fff4ef;border:1px solid rgba(220,38,38,.4);border-radius:var(--radius);padding:18px;display:flex;gap:14px;align-items:flex-start}
+  .bigcallout .ico{font-size:1.6rem;flex:0 0 auto}
+  .bigcallout b{color:var(--danger)}
+  .vs-bars{margin-top:12px}
+  .vs-row{display:grid;grid-template-columns:120px 1fr;align-items:center;gap:10px;margin:8px 0;font-size:.85rem}
+  .vs-track{background:var(--card-2);border:1px solid var(--line);border-radius:8px;height:30px;overflow:hidden;position:relative}
+  .vs-fill{height:100%;width:0;transition:width 1.1s cubic-bezier(.2,.7,.2,1);display:flex;align-items:center;justify-content:flex-end;padding-right:8px;font-weight:700;font-size:.78rem;color:#fff}
+
+  /* ---------- COMPARISON ---------- */
+  .cmp-grid{display:grid;gap:18px;grid-template-columns:1fr}
+  @media(min-width:760px){.cmp-grid{grid-template-columns:1fr 1fr}}
+  .cmp-box{position:relative;width:100%;height:230px}
+
+  /* ---------- TANGEDCO ---------- */
+  #tangedco .card{border:1px solid rgba(220,38,38,.4);border-left:5px solid var(--danger);background:#fff6f5}
+  .warnhead{display:flex;align-items:center;gap:12px;margin-bottom:6px;padding-right:46px}
+  .warnhead .badge{font-size:1.6rem}
+  .tg-nums{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
+  .tg-nums .b{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}
+  .tg-nums .v{font-size:1.5rem;font-weight:800;color:var(--danger);font-variant-numeric:tabular-nums;line-height:1.1}
+  .tg-nums .k{color:var(--muted);font-size:.82rem;margin-top:4px}
+  .tg-break table{width:100%;border-collapse:collapse;margin-top:8px;font-size:.82rem}
+  .tg-break td{padding:7px 6px;border-bottom:1px solid var(--line)}
+  .tg-break td:last-child{text-align:right;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  /* ---------- IMPACT ---------- */
+  .impact-grid{display:grid;gap:14px;grid-template-columns:1fr}
+  @media(min-width:600px){.impact-grid{grid-template-columns:1fr 1fr}}
+  .impact{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:flex;gap:14px;align-items:flex-start;box-shadow:var(--shadow);position:relative}
+  .impact .ic{font-size:1.8rem;flex:0 0 auto;line-height:1}
+  .impact .v{font-size:1.4rem;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums;line-height:1.1;padding-right:42px}
+  .impact .t{color:var(--muted);font-size:.88rem;margin-top:4px}
+
+  /* ---------- FORECAST ---------- */
+  #future .fc-wrap{border:2px dashed rgba(255,107,53,.55);border-radius:var(--radius);padding:18px;background:linear-gradient(180deg,#fafbfc,#f4f6f8)}
+  .fc-tag{display:inline-flex;gap:8px;align-items:center;background:#fff4ef;border:1px solid rgba(255,107,53,.4);color:var(--accent-text);
+    border-radius:999px;padding:6px 12px;font-size:.78rem;font-weight:700;margin-bottom:14px}
+  .fc-cards{display:grid;gap:14px;grid-template-columns:1fr;margin-top:16px}
+  @media(min-width:760px){.fc-cards{grid-template-columns:repeat(3,1fr)}}
+  .fc-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px}
+  .fc-card .v{font-size:1.5rem;font-weight:800;color:var(--accent-text);line-height:1.1}
+  .fc-card .t{color:var(--muted);font-size:.86rem;margin-top:6px}
+
+  /* ---------- GLOSSARY ---------- */
+  details.gl{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+  details.gl summary{cursor:pointer;padding:14px 16px;font-weight:700;list-style:none;display:flex;justify-content:space-between;align-items:center;min-height:44px;gap:12px}
+  details.gl summary::-webkit-details-marker{display:none}
+  details.gl summary .chev{color:var(--accent);transition:transform .25s ease;flex:0 0 auto;font-weight:800}
+  details.gl[open] summary .chev{transform:rotate(45deg)}
+  details.gl .body{padding:0 16px 16px;color:var(--muted);font-size:.92rem}
+
+  /* ---------- FOOTER ---------- */
+  footer{padding:34px 0 60px;color:var(--muted);font-size:.84rem;text-align:center}
+  footer .src{color:var(--text);font-weight:600}
+  footer a{color:var(--accent-text);font-weight:700}
+
+  /* ---------- TOAST ---------- */
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;
+    padding:12px 18px;border-radius:999px;font-size:.86rem;font-weight:600;opacity:0;pointer-events:none;z-index:100;
+    transition:opacity .3s ease,transform .3s ease;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto}
+    .stat,.pz-stmt{opacity:1!important;transform:none!important;transition:none!important}
+    .vs-fill{transition:none!important}
+    .coin-flow{animation:none!important;display:none!important}
+    *{animation-duration:.001ms!important;transition-duration:.001ms!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<header class="nav">
+  <div class="nav-inner">
+    <span class="brand">TN Finances<span class="dot">.</span></span>
+    <div class="lang-toggle" role="group" aria-label="Language">
+      <button type="button" data-lang="en" class="active">EN</button>
+      <button type="button" data-lang="ta">தமிழ்</button>
+    </div>
+    <nav class="navlinks" aria-label="Section navigation">
+      <a href="#hero" data-i18n="nav_home">Home</a>
+      <a href="#mylife" data-i18n="nav_you">For You</a>
+      <a href="#debt" data-i18n="nav_debt">Debt</a>
+      <a href="#gsdp">28.3%</a>
+      <a href="#rupee" data-i18n="nav_rupee">Your ₹1</a>
+      <a href="#gooddebt" data-i18n="nav_types">Debt Types</a>
+      <a href="#gap" data-i18n="nav_gap">The Gap</a>
+      <a href="#compare" data-i18n="nav_states">vs States</a>
+      <a href="#tangedco" data-i18n="nav_power">Power</a>
+      <a href="#impact" data-i18n="nav_impact">Impact</a>
+      <a href="#future" data-i18n="nav_future">2030</a>
+      <a href="#glossary" data-i18n="nav_glossary">Glossary</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<!-- ============ HERO ============ -->
+<section id="hero">
+  <div class="wrap">
+    <h1 class="hero-h1"><span data-i18n="hero_h1a">Where Did </span><span class="hl" data-i18n="hero_h1b">Your Money</span><span data-i18n="hero_h1c"> Go?</span></h1>
+    <p class="hero-sub" data-i18n="hero_sub">Tamil Nadu's finances — explained simply.</p>
+    <div class="hero-stats">
+      <div class="stat" data-stat data-share="debt">
+        <button class="share-btn" data-sharebtn aria-label="Share this fact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg><span data-i18n="share">Share</span></button>
+        <div class="big"><span data-count="10" data-decimals="0" data-prefix="₹" data-suffix-i18n="lc">₹0</span></div>
+        <div class="label" data-i18n="hero_s1_label">Total government debt</div>
+        <div class="exp" data-i18n="hero_s1_exp">What the State directly owes today — up from ₹5.13 lakh crore just 5 years ago. That's nearly doubled.</div>
+      </div>
+      <div class="stat" data-stat data-share="hidden">
+        <button class="share-btn" data-sharebtn aria-label="Share this fact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg><span data-i18n="share">Share</span></button>
+        <div class="big"><span data-count="13.18" data-decimals="2" data-prefix="₹" data-suffix-i18n="lc">₹0</span></div>
+        <div class="label" data-i18n="hero_s2_label">Including hidden debt</div>
+        <div class="exp" data-i18n="hero_s2_exp">Add the debts of State-owned power, transport &amp; supply companies that the government has guaranteed, and the real exposure jumps to ₹13.18 lakh crore.</div>
+      </div>
+      <div class="stat" data-stat data-share="child">
+        <button class="share-btn" data-sharebtn aria-label="Share this fact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg><span data-i18n="share">Share</span></button>
+        <div class="big"><span data-count="1.28" data-decimals="2" data-prefix="₹" data-suffix-i18n="lakh">₹0</span></div>
+        <div class="label" data-i18n="hero_s3_label">Every child born today owes this</div>
+        <div class="exp" data-i18n="hero_s3_exp">Split the State's debt across every resident and each person already carries ₹1.28 lakh — before they earn a single rupee.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PERSONALIZER ============ -->
+<section id="mylife">
+  <div class="wrap">
+    <div class="eyebrow" data-i18n="pz_eyebrow">Make it personal</div>
+    <h2 data-i18n="pz_title">What does this mean for me?</h2>
+    <p class="lead" data-i18n="pz_lead">Pick who you are and where you live to see the State's finances through your own eyes.</p>
+    <div class="pz-inputs pz-inputs-single">
+      <div class="pz-field">
+        <label for="pzPersona" data-i18n="pz_who">Who are you?</label>
+        <select id="pzPersona"></select>
+      </div>
+    </div>
+    <div class="pz-result" id="pzResult"></div>
+    <p class="pz-note" data-i18n="pz_note">📄 Every figure below is taken directly from the Tamil Nadu White Paper on State Finances.</p>
+  </div>
+</section>
+
+<!-- ============ DEBT TIMELINE ============ -->
+<section id="debt">
+  <div class="wrap">
+    <div class="eyebrow" data-i18n="debt_eyebrow">The big picture</div>
+    <h2 data-i18n="debt_title">How fast did Tamil Nadu's debt grow?</h2>
+    <p class="lead" data-i18n="debt_lead">In five years the State's debt nearly doubled — from ₹5.13 lakh crore to ₹10 lakh crore. As a share of the economy (GSDP), it has stayed stuck above the safe limit the whole time.</p>
+    <div class="card chartcard">
+      <div class="chart-title" data-i18n="debt_ct">Debt stock &amp; debt-to-GSDP, 2020-21 to 2025-26</div>
+      <div class="chart-sub" data-i18n="debt_cs">Bars = total debt in ₹ Lakh Crore · Line = debt as a % of the State's economy (GSDP)</div>
+      <div class="chart-box"><canvas id="debtChart" role="img" aria-label="Tamil Nadu debt rising from 5.13 to 10 lakh crore; debt as % of GSDP stays between 27.4% and 28.8%, above the 25% danger line"></canvas></div>
+      <div class="annot"><span class="i">!</span><span data-i18n-html="debt_annot">The dashed red line is the <b>25% "danger zone"</b> — the ceiling set by Tamil Nadu's own Fiscal Responsibility Act. The State has been above it every single year.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 28.3% EXPLAINER ============ -->
+<section id="gsdp">
+  <div class="wrap">
+    <div class="eyebrow" data-i18n="gsdp_eyebrow">Putting it in plain terms</div>
+    <h2 data-i18n="gsdp_title">What does "28.3% of GSDP" actually mean?</h2>
+    <p class="lead" data-i18n="gsdp_lead">GSDP is everything Tamil Nadu produces in a year — the size of its whole economy. Owing 28.3% of it is like this:</p>
+    <div class="card">
+      <p style="margin-bottom:6px"><b data-i18n="gsdp_if">If Tamil Nadu's entire economy were ₹100…</b></p>
+      <div class="ratio-vis" id="ratioVis" aria-hidden="true" style="display:flex;flex-wrap:wrap;gap:3px;margin:8px 0 14px;max-width:420px"></div>
+      <p style="margin:0"><span class="num" style="font-size:1.3rem">₹28.30</span> <span data-i18n="gsdp_owed">of every ₹100 is already owed as debt. The orange coins above are the borrowed part.</span></p>
+    </div>
+    <div class="card chartcard">
+      <div class="chart-title" data-i18n="gsdp_ct">How Tamil Nadu compares (Debt as % of GSDP, 2025-26)</div>
+      <div class="chart-sub" data-i18n="gsdp_cs">Lower is healthier. Tamil Nadu carries the heaviest debt load of the group.</div>
+      <div class="chart-box" style="height:260px"><canvas id="gsdpCompare" role="img" aria-label="Debt as percent of GSDP — Tamil Nadu 28.3, Karnataka 23.4, Maharashtra 19.7, Gujarat 17.6"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RUPEE BREAKDOWN ============ -->
+<section id="rupee">
+  <div class="wrap">
+    <div class="eyebrow" data-i18n="ru_eyebrow">The most important chart</div>
+    <h2 data-i18n="ru_title">For every ₹1 the government earns, here's where it goes</h2>
+    <p class="lead" data-i18n="ru_lead">Tap a slice to see what it means. Before the government can choose to spend on anything new, most of every rupee is already promised away.</p>
+    <div class="rupee-grid" style="margin-top:18px">
+      <div>
+        <div class="rupee-chart-box">
+          <canvas id="rupeeChart" role="img" aria-label="Where each rupee of revenue goes: Salaries 28.4 paise, Interest 22.8 paise, Pensions 13.2 paise, Other fixed bills 22.6 paise, Left for everything else 13 paise"></canvas>
+          <div class="coin-center" aria-hidden="true"><span class="rs">₹1</span><span class="cl" data-i18n="ru_coin">EARNED</span></div>
+        </div>
+        <div class="coininfo" data-i18n="ru_info">87 paise of every ₹1 is locked before the budget even begins</div>
+      </div>
+      <div>
+        <div class="segpanel" id="segPanel" aria-live="polite"></div>
+        <div class="seglist" id="segList"></div>
+      </div>
+    </div>
+    <div class="bigcallout">
+      <span class="ico">🚨</span>
+      <div>
+        <div style="font-weight:700;margin-bottom:8px" data-i18n="ru_alarm_h">The alarm bell: paying off old loans now costs more than building the future.</div>
+        <div style="font-size:.92rem;color:var(--muted)" data-i18n-html="ru_alarm_b">Interest payments <b>(₹67,050 Cr)</b> now <b>EXCEED</b> all spending on new roads, hospitals and schools combined <b>(₹50,911 Cr)</b>.</div>
+        <div class="vs-bars">
+          <div class="vs-row"><span data-i18n="ru_int">Interest on debt</span><div class="vs-track"><div class="vs-fill" data-w="100" style="background:var(--danger)">₹67,050 Cr</div></div></div>
+          <div class="vs-row"><span data-i18n="ru_cap">Building (capital)</span><div class="vs-track"><div class="vs-fill" data-w="76" style="background:var(--gold)">₹50,911 Cr</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ GOOD vs BAD DEBT ============ -->
+<section id="gooddebt">
+  <div class="wrap">
+    <div class="eyebrow" data-i18n="gd_eyebrow">Understanding debt</div>
+    <h2 data-i18n="gd_title">Not all debt is equal — here's what's alarming</h2>
+    <p class="lead" data-i18n="gd_lead">Borrowing can be smart or dangerous depending on what it's used for. Follow the coin across the three stages.</p>
+    <div class="flow" id="flow">
+      <div class="coin-flow" aria-hidden="true">🪙</div>
+      <div class="panel" style="--pc:#22C55E">
+        <div class="pstep">1</div>
+        <div class="pico">🏗️</div>
+        <div class="plabel" data-i18n="gd_p1_l">Borrowing to BUILD</div>
+        <div class="pex" data-i18n="gd_p1_e">Building highways, hospitals, schools</div>
+        <div class="psub" data-i18n="gd_p1_s">This debt pays itself back through growth</div>
+      </div>
+      <div class="panel" style="--pc:#B45309">
+        <div class="pstep">2</div>
+        <div class="pico">💼</div>
+        <div class="plabel" data-i18n="gd_p2_l">Borrowing to OPERATE</div>
+        <div class="pex" data-i18n="gd_p2_e">Paying salaries and daily expenses</div>
+        <div class="psub" data-i18n="gd_p2_s">Nothing is built. The bill still comes.</div>
+      </div>
+      <div class="panel" style="--pc:#FF6B35">
+        <div class="pstep">3</div>
+        <div class="pico">🌀</div>
+        <div class="plabel" data-i18n="gd_p3_l">Borrowing to PAY INTEREST</div>
+        <div class="pex" data-i18n="gd_p3_e">Taking new loans to pay old loan interest</div>
+        <div class="psub" data-i18n="gd_p3_s">This is where Tamil Nadu is now</div>
+      </div>
+    </div>
+    <div class="flow-callout" data-i18n-html="gd_callout">In 2025-26, Tamil Nadu paid <b>₹67,050 Crore</b> in interest — more than it spent on roads, hospitals, and schools combined (<b>₹50,911 Crore</b>). The government is now borrowing just to survive, not to grow.</div>
+  </div>
+</section>
+
+<!-- ============ REVENUE vs EXPENDITURE ============ -->
+<section id="gap">
+  <div class="wrap">
+    <div class="eyebrow" data-i18n="gap_eyebrow">Living beyond means</div>
+    <h2 data-i18n="gap_title">Tamil Nadu spends more than it earns — every single year</h2>
+    <p class="lead" data-i18n="gap_lead">The gap between what the government takes in and what it spends has only grown. That gap is plugged by fresh borrowing.</p>
+    <div class="card chartcard">
+      <div class="chart-title" data-i18n="gap_ct">What the government earns vs what it spends (₹ Lakh Crore)</div>
+      <div class="chart-sub" data-i18n="gap_cs">Green = total income · Orange = total spending</div>
+      <div class="chart-box"><canvas id="gapChart" role="img" aria-label="Revenue versus expenditure each year 2021-22 to 2025-26; spending always exceeds income, gap widening to about 1.33 lakh crore"></canvas></div>
+      <div class="annot"><span class="i">↳</span><span data-i18n-html="gap_annot">In 2025-26 the government spent <b>₹1.33 lakh crore</b> more than it earned. <b>This gap is filled by borrowing</b> — which is exactly why the debt keeps climbing.</span></div>
+      <p style="margin:14px 0 0;font-size:.9rem;color:var(--muted)" data-i18n-html="gap_house"><b>Think of it as a household:</b> if the State were a family earning ₹10,000 a month, it would spend about ₹14,500 — and borrow the ₹4,500 shortfall — every single month.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ COMPARISON ============ -->
+<section id="compare">
+  <div class="wrap">
+    <div class="eyebrow" data-i18n="cmp_eyebrow">The neighbours</div>
+    <h2 data-i18n="cmp_title">How does Tamil Nadu compare to similar states?</h2>
+    <p class="lead" data-i18n="cmp_lead">Against Karnataka, Maharashtra and Gujarat, Tamil Nadu is the most stretched on every measure of fiscal health. Tamil Nadu is highlighted in orange.</p>
+    <div class="cmp-grid" style="margin-top:18px">
+      <div class="card"><div class="chart-title" data-i18n="cmp_debt_t">Debt as % of GSDP</div><div class="chart-sub" data-i18n="cmp_debt_s">How much the state owes vs its economy — lower is healthier</div><div class="cmp-box"><canvas id="cmpDebt" role="img" aria-label="Debt to GSDP comparison"></canvas></div></div>
+      <div class="card"><div class="chart-title" data-i18n="cmp_fis_t">Fiscal Deficit as % of GSDP</div><div class="chart-sub" data-i18n="cmp_fis_s">How much it overspends each year — the 3% line is the legal limit</div><div class="cmp-box"><canvas id="cmpFiscal" role="img" aria-label="Fiscal deficit comparison"></canvas></div></div>
+      <div class="card"><div class="chart-title" data-i18n="cmp_rev_t">Revenue Deficit as % of GSDP</div><div class="chart-sub" data-i18n="cmp_rev_s">Shortfall on day-to-day running costs — a plus means surplus</div><div class="cmp-box"><canvas id="cmpRev" role="img" aria-label="Revenue balance comparison"></canvas></div></div>
+      <div class="card"><div class="chart-title" data-i18n="cmp_int_t">Interest as % of income</div><div class="chart-sub" data-i18n="cmp_int_s">Share of revenue eaten by interest before anything else</div><div class="cmp-box"><canvas id="cmpInt" role="img" aria-label="Interest to revenue comparison"></canvas></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TANGEDCO ============ -->
+<section id="tangedco">
+  <div class="wrap">
+    <div class="eyebrow" data-i18n="tg_eyebrow">A crisis inside the crisis</div>
+    <h2 data-i18n="tg_title">The electricity board's hidden mountain of debt</h2>
+    <div class="card" data-share="tangedco">
+      <button class="share-btn" data-sharebtn aria-label="Share this fact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg><span data-i18n="share">Share</span></button>
+      <div class="warnhead"><span class="badge">⚡</span><h3 style="margin:0" data-i18n="tg_h">TANGEDCO / TNEB Group (State power companies)</h3></div>
+      <p style="color:var(--muted);margin:6px 0 0" data-i18n-html="tg_p">This debt sits <b>outside</b> the headline government debt — but if the companies can't pay, the State must.</p>
+      <div class="tg-nums">
+        <div class="b"><div class="v">₹2.47 <span data-i18n="lc_short">Lakh Cr</span></div><div class="k" data-i18n="tg_n1">Total debt owed</div></div>
+        <div class="b"><div class="v">₹1.82 <span data-i18n="lc_short">Lakh Cr</span></div><div class="k" data-i18n="tg_n2">Accumulated losses</div></div>
+      </div>
+      <p style="margin:0 0 4px" data-i18n-html="tg_plain"><b>In plain terms:</b> the electricity board alone owes more than the entire annual budget of many countries — and it loses money every month, running a roughly <b>₹2,500 crore shortfall</b> that the government keeps topping up (₹33,478 crore of support in 2025-26 alone).</p>
+      <div class="tg-break">
+        <div style="margin-top:14px;color:var(--text);font-weight:600" data-i18n="tg_where">Where the ₹2.47 lakh crore debt sits:</div>
+        <table>
+          <tr><td data-i18n="tg_r1">TNPDCL — Distribution</td><td>₹1,07,365 Cr</td></tr>
+          <tr><td data-i18n="tg_r2">TNPGCL — Generation</td><td>₹1,03,128 Cr</td></tr>
+          <tr><td data-i18n="tg_r3">TANTRANSCO — Transmission</td><td>₹30,965 Cr</td></tr>
+          <tr><td data-i18n="tg_r4">TNGECL — Green Energy</td><td>₹5,672 Cr</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ IMPACT ============ -->
+<section id="impact">
+  <div class="wrap">
+    <div class="eyebrow" data-i18n="im_eyebrow">Bringing it home</div>
+    <h2 data-i18n="im_title">What this means for you</h2>
+    <p class="lead" data-i18n="im_lead">The numbers are huge and abstract. Here's what they look like in everyday terms.</p>
+    <div class="impact-grid" style="margin-top:18px">
+      <div class="impact" data-share="perday">
+        <button class="share-btn" data-sharebtn aria-label="Share this fact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg><span data-i18n="share">Share</span></button>
+        <span class="ic">⏱️</span><div><div class="v">₹184 <span data-i18n="crore">Crore</span><span style="font-size:.9rem;color:var(--muted)" data-i18n="per_day"> / day</span></div><div class="t" data-i18n="im_c1">That's how much Tamil Nadu pays just in interest on old loans — every single day (₹67,050 crore a year).</div></div>
+      </div>
+      <div class="impact" data-share="child2">
+        <button class="share-btn" data-sharebtn aria-label="Share this fact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg><span data-i18n="share">Share</span></button>
+        <span class="ic">👶</span><div><div class="v">₹1.28 <span data-i18n="lakh_w">Lakh</span></div><div class="t" data-i18n="im_c2">The share of State debt riding on every child born today, before they've earned anything.</div></div>
+      </div>
+      <div class="impact" data-share="schools">
+        <button class="share-btn" data-sharebtn aria-label="Share this fact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg><span data-i18n="share">Share</span></button>
+        <span class="ic">🏥</span><div><div class="v" data-i18n="im_c3v">Schools &lt; Interest</div><div class="t" data-i18n="im_c3">Spending on new schools, hospitals and roads (₹50,911 Cr) is now LESS than what's paid in interest (₹67,050 Cr).</div></div>
+      </div>
+      <div class="impact" data-share="central">
+        <button class="share-btn" data-sharebtn aria-label="Share this fact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg><span data-i18n="share">Share</span></button>
+        <span class="ic">📉</span><div><div class="v">6.64% → 4.097%</div><div class="t" data-i18n="im_c4">Tamil Nadu's share of central taxes has shrunk over the years — a roughly 38% cut — leaving less money to work with.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FORECAST ============ -->
+<section id="future">
+  <div class="wrap">
+    <div class="eyebrow" data-i18n="fc_eyebrow">Where are we headed?</div>
+    <h2 data-i18n="fc_title">If nothing changes…</h2>
+    <p class="lead" data-i18n="fc_lead">Carrying today's growth rate forward, here's roughly where Tamil Nadu's debt is heading by 2030-31.</p>
+    <div class="fc-wrap" style="margin-top:18px">
+      <span class="fc-tag" data-i18n="fc_tag">📄 These are the White Paper's own demographic projections</span>
+      <div class="fc-cards">
+        <div class="fc-card"><div class="v" data-i18n="fc_c1v">10.6% → 18.2%</div><div class="t" data-i18n="fc_c1">Share of elderly in the population, rising from 2011 to 2031 — among the steepest of any large State.</div></div>
+        <div class="fc-card"><div class="v" data-i18n="fc_c2v">20.6 → 32.7</div><div class="t" data-i18n="fc_c2">Old-age dependency ratio, climbing from 2021 to 2036 — fewer working-age people supporting more retirees.</div></div>
+        <div class="fc-card"><div class="v" data-i18n="fc_c3v">66.4% → 63.6%</div><div class="t" data-i18n="fc_c3">Working-age share of the population, shrinking from 2021 to 2036 — a narrowing tax base just as costs rise.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ GLOSSARY ============ -->
+<section id="glossary">
+  <div class="wrap">
+    <div class="eyebrow" data-i18n="gl_eyebrow">Jargon, decoded</div>
+    <h2 data-i18n="gl_title">Glossary — tap to expand</h2>
+    <p class="lead" data-i18n="gl_lead">Every term in plain English, no finance degree required.</p>
+    <div style="margin-top:18px" id="glossary-list"></div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p class="src" data-i18n="ft_src">Data source: Tamil Nadu Government White Paper on State Finances, June 2026.</p>
+    <p><a href="https://financedept.tn.gov.in/en/my-documents/2020/07/TN_White_Paper_English-2026.pdf" target="_blank" rel="noopener" data-i18n="ft_link">📄 Read the official White Paper (PDF)</a></p>
+    <p data-i18n="ft_note">This dashboard is for public education. All figures are taken from the official document.</p>
+  </div>
+</footer>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+/* =========================================================================
+   1) DATA — extracted from the White Paper. Edit values here only.
+   ========================================================================= */
+const DATA = {
+  debtTimeline:{years:["2020-21","2021-22","2022-23","2023-24","2024-25","2025-26"],
+    stockLakhCr:[5.13,5.96,6.77,7.58,8.54,10.00], debtToGSDP:[28.7,28.8,28.5,28.2,27.4,28.3], dangerLine:25},
+  gsdpCompare:{values:[28.3,23.4,19.7,17.6]},
+  rupee:[
+    {key:"sal", paise:28.4, cr:"₹83,320 Cr", color:"#64748B"},
+    {key:"int", paise:22.8, cr:"₹67,050 Cr", color:"#FF6B35"},
+    {key:"pen", paise:13.2, cr:"₹38,740 Cr", color:"#94A3B8"},
+    {key:"oth", paise:22.6, cr:"≈₹66,400 Cr", color:"#C99A27"},
+    {key:"left",paise:13.0, cr:"≈₹38,200 Cr", color:"#334155"}
+  ],
+  gap:{years:["2021-22","2022-23","2023-24","2024-25","2025-26"],
+    revenue:[2.07,2.44,2.65,2.83,2.94], spending:[2.81,3.26,3.55,3.84,4.27]},
+  compare:{
+    debt:{order:["TN","KA","MH","GJ"], values:[28.3,23.4,19.7,17.6], suffix:"%"},
+    fiscal:{order:["TN","MH","KA","GJ"], values:[3.8,3.0,2.8,1.9], suffix:"%"},
+    revenue:{order:["TN","KA","MH","GJ"], values:[-2.2,-0.8,-0.7,0.8], suffix:"%", allowGreen:true},
+    interest:{order:["TN","KA","GJ","MH"], values:[22.8,16.4,12.0,10.3], suffix:"%"}
+  },
+};
+
+/* =========================================================================
+   2) i18n DICTIONARY  (en = English default, ta = Tamil)
+   ========================================================================= */
+const I18N = {
+ en:{
+  lc:" Lakh Cr", lakh:" Lakh", lc_short:"Lakh Cr", lakh_w:"Lakh", crore:"Crore", per_day:" / day", share:"Share",
+  nav_home:"Home", nav_you:"For You", nav_debt:"Debt", nav_rupee:"Your ₹1", nav_types:"Debt Types",
+  nav_gap:"The Gap", nav_states:"vs States", nav_power:"Power", nav_impact:"Impact", nav_future:"Ahead", nav_glossary:"Glossary",
+  hero_h1a:"Where Did ", hero_h1b:"Your Money", hero_h1c:" Go?",
+  hero_sub:"Tamil Nadu's finances — explained simply.",
+  hero_s1_label:"Total government debt",
+  hero_s1_exp:"What the State directly owes today — up from ₹5.13 lakh crore just 5 years ago. That's nearly doubled.",
+  hero_s2_label:"Including hidden debt",
+  hero_s2_exp:"Add the debts of State-owned power, transport & supply companies that the government has guaranteed, and the real exposure jumps to ₹13.18 lakh crore.",
+  hero_s3_label:"Every child born today owes this",
+  hero_s3_exp:"Split the State's debt across every resident and each person already carries ₹1.28 lakh — before they earn a single rupee.",
+  pz_eyebrow:"Make it personal", pz_title:"What does this mean for me?",
+  pz_lead:"Pick who you are to see the State's finances through your own eyes.",
+  pz_who:"Who are you?",
+  pz_note:"📄 Every figure below is taken directly from the Tamil Nadu White Paper on State Finances.",
+  persona_student:"Student", persona_worker:"Working Adult", persona_farmer:"Farmer", persona_senior:"Senior Citizen", persona_parent:"Parent",
+  debt_eyebrow:"The big picture", debt_title:"How fast did Tamil Nadu's debt grow?",
+  debt_lead:"In five years the State's debt nearly doubled — from ₹5.13 lakh crore to ₹10 lakh crore. As a share of the economy (GSDP), it has stayed stuck above the safe limit the whole time.",
+  debt_ct:"Debt stock & debt-to-GSDP, 2020-21 to 2025-26",
+  debt_cs:"Bars = total debt in ₹ Lakh Crore · Line = debt as a % of the State's economy (GSDP)",
+  debt_annot:"The dashed red line is the <b>25% \"danger zone\"</b> — the ceiling set by Tamil Nadu's own Fiscal Responsibility Act. The State has been above it every single year.",
+  ds_debt:"Total debt (₹ Lakh Cr)", ds_gsdp:"Debt as % of GSDP", ds_danger:"Danger zone (25% of GSDP)",
+  gsdp_eyebrow:"Putting it in plain terms", gsdp_title:"What does \"28.3% of GSDP\" actually mean?",
+  gsdp_lead:"GSDP is everything Tamil Nadu produces in a year — the size of its whole economy. Owing 28.3% of it is like this:",
+  gsdp_if:"If Tamil Nadu's entire economy were ₹100…",
+  gsdp_owed:"of every ₹100 is already owed as debt. The orange coins above are the borrowed part.",
+  gsdp_ct:"How Tamil Nadu compares (Debt as % of GSDP, 2025-26)",
+  gsdp_cs:"Lower is healthier. Tamil Nadu carries the heaviest debt load of the group.",
+  ru_eyebrow:"The most important chart", ru_title:"For every ₹1 the government earns, here's where it goes",
+  ru_lead:"Tap a slice to see what it means. Before the government can choose to spend on anything new, most of every rupee is already promised away.",
+  ru_coin:"EARNED", ru_info:"87 paise of every ₹1 is locked before the budget even begins",
+  ru_alarm_h:"The alarm bell: paying off old loans now costs more than building the future.",
+  ru_alarm_b:"Interest payments <b>(₹67,050 Cr)</b> now <b>EXCEED</b> all spending on new roads, hospitals and schools combined <b>(₹50,911 Cr)</b>.",
+  ru_int:"Interest on debt", ru_cap:"Building (capital)",
+  ru_start_nm:"Tap any slice or button", ru_start_ds:"Each part of the rupee is explained in one plain sentence. Start with the orange slice — interest on old loans.",
+  seg_sal_n:"Salaries", seg_sal_d:"Pay for the State's teachers, doctors, police and lakhs of other government staff. Unavoidable and rising every year.",
+  seg_int_n:"Interest on old debt", seg_int_d:"Just the interest on money already borrowed in the past — it buys nothing new, yet it's the fastest-growing bill.",
+  seg_pen_n:"Pensions", seg_pen_d:"Payments to retired government employees. A promise that must be kept, and it grows as more people retire.",
+  seg_oth_n:"Other fixed bills", seg_oth_d:"Grants to local bodies, the State's compulsory share in central schemes, disaster funds and other dues it legally cannot skip.",
+  seg_left_n:"Left for everything else", seg_left_d:"All that remains for welfare schemes AND building new roads, hospitals and schools. The whole future is squeezed into just 13 paise.",
+  paise_of:"paise", of_every:"of every ₹1 ·",
+  gd_eyebrow:"Understanding debt", gd_title:"Not all debt is equal — here's what's alarming",
+  gd_lead:"Borrowing can be smart or dangerous depending on what it's used for. Follow the coin across the three stages.",
+  gd_p1_l:"Borrowing to BUILD", gd_p1_e:"Building highways, hospitals, schools", gd_p1_s:"This debt pays itself back through growth",
+  gd_p2_l:"Borrowing to OPERATE", gd_p2_e:"Paying salaries and daily expenses", gd_p2_s:"Nothing is built. The bill still comes.",
+  gd_p3_l:"Borrowing to PAY INTEREST", gd_p3_e:"Taking new loans to pay old loan interest", gd_p3_s:"This is where Tamil Nadu is now",
+  gd_callout:"In 2025-26, Tamil Nadu paid <b>₹67,050 Crore</b> in interest — more than it spent on roads, hospitals, and schools combined (<b>₹50,911 Crore</b>). The government is now borrowing just to survive, not to grow.",
+  gap_eyebrow:"Living beyond means", gap_title:"Tamil Nadu spends more than it earns — every single year",
+  gap_lead:"The gap between what the government takes in and what it spends has only grown. That gap is plugged by fresh borrowing.",
+  gap_ct:"What the government earns vs what it spends (₹ Lakh Crore)", gap_cs:"Green = total income · Orange = total spending",
+  gap_annot:"In 2025-26 the government spent <b>₹1.33 lakh crore</b> more than it earned. <b>This gap is filled by borrowing</b> — which is exactly why the debt keeps climbing.",
+  gap_house:"<b>Think of it as a household:</b> if the State were a family earning ₹10,000 a month, it would spend about ₹14,500 — and borrow the ₹4,500 shortfall — every single month.",
+  ds_earn:"Earns (income)", ds_spend:"Spends",
+  cmp_eyebrow:"The neighbours", cmp_title:"How does Tamil Nadu compare to similar states?",
+  cmp_lead:"Against Karnataka, Maharashtra and Gujarat, Tamil Nadu is the most stretched on every measure of fiscal health. Tamil Nadu is highlighted in orange.",
+  cmp_debt_t:"Debt as % of GSDP", cmp_debt_s:"How much the state owes vs its economy — lower is healthier",
+  cmp_fis_t:"Fiscal Deficit as % of GSDP", cmp_fis_s:"How much it overspends each year — the 3% line is the legal limit",
+  cmp_rev_t:"Revenue Deficit as % of GSDP", cmp_rev_s:"Shortfall on day-to-day running costs — a plus means surplus",
+  cmp_int_t:"Interest as % of income", cmp_int_s:"Share of revenue eaten by interest before anything else",
+  tg_eyebrow:"A crisis inside the crisis", tg_title:"The electricity board's hidden mountain of debt",
+  tg_h:"TANGEDCO / TNEB Group (State power companies)",
+  tg_p:"This debt sits <b>outside</b> the headline government debt — but if the companies can't pay, the State must.",
+  tg_n1:"Total debt owed", tg_n2:"Accumulated losses",
+  tg_plain:"<b>In plain terms:</b> the electricity board alone owes more than the entire annual budget of many countries — and it loses money every month, running a roughly <b>₹2,500 crore shortfall</b> that the government keeps topping up (₹33,478 crore of support in 2025-26 alone).",
+  tg_where:"Where the ₹2.47 lakh crore debt sits:",
+  tg_r1:"TNPDCL — Distribution", tg_r2:"TNPGCL — Generation", tg_r3:"TANTRANSCO — Transmission", tg_r4:"TNGECL — Green Energy",
+  im_eyebrow:"Bringing it home", im_title:"What this means for you",
+  im_lead:"The numbers are huge and abstract. Here's what they look like in everyday terms.",
+  im_c1:"That's how much Tamil Nadu pays just in interest on old loans — every single day (₹67,050 crore a year).",
+  im_c2:"The share of State debt riding on every child born today, before they've earned anything.",
+  im_c3v:"Schools < Interest", im_c3:"Spending on new schools, hospitals and roads (₹50,911 Cr) is now LESS than what's paid in interest (₹67,050 Cr).",
+  im_c4:"Tamil Nadu's share of central taxes has shrunk over the years — a roughly 38% cut — leaving less money to work with.",
+  fc_eyebrow:"Where are we headed?", fc_title:"If nothing changes…",
+  fc_lead:"The White Paper's own projections show Tamil Nadu ageing fast — fewer workers will have to shoulder a rising debt. It warns this is how a debt trap forms.",
+  fc_tag:"📄 These are the White Paper's own demographic projections",
+  fc_c1v:"10.6% → 18.2%", fc_c1:"Share of elderly in the population, rising from 2011 to 2031 — among the steepest of any large State.",
+  fc_c2v:"20.6 → 32.7", fc_c2:"Old-age dependency ratio, climbing from 2021 to 2036 — fewer working-age people supporting more retirees.",
+  fc_c3v:"66.4% → 63.6%", fc_c3:"Working-age share of the population, shrinking from 2021 to 2036 — a narrowing tax base just as costs rise.",
+  gl_eyebrow:"Jargon, decoded", gl_title:"Glossary — tap to expand", gl_lead:"Every term in plain English, no finance degree required.",
+  ft_src:"Data source: Tamil Nadu Government White Paper on State Finances, June 2026.",
+  ft_link:"📄 Read the official White Paper (PDF)",
+  ft_note:"This dashboard is for public education. All figures are taken from the official document.",
+  st_TN:"Tamil Nadu", st_KA:"Karnataka", st_MH:"Maharashtra", st_GJ:"Gujarat",
+  copied:"Copied to clipboard!",
+  glossary:[
+   ["GSDP (Gross State Domestic Product)","The total value of everything Tamil Nadu produces in a year — the size of its whole economy. Debt is measured against this to see if it's manageable."],
+   ["Fiscal Deficit","The total gap between everything the government spends and everything it earns in a year. It is covered entirely by borrowing, so it directly adds to debt."],
+   ["Revenue Deficit","A shortfall on just the day-to-day running costs (salaries, pensions, interest) — meaning the State borrows even for routine expenses, not just for building things. Borrowing for daily bills is a warning sign."],
+   ["Capital Expenditure","Money spent building lasting assets — roads, hospitals, schools, power lines. This is 'good' spending that creates future value, and it's being squeezed."],
+   ["Committed Expenditure","Spending the government has no choice over: salaries, pensions and interest. In Tamil Nadu this already eats about 64 paise of every rupee earned."],
+   ["Off-budget / Hidden Borrowing","Debt taken on by State-owned companies (like the power board) rather than the government directly. It doesn't show in the headline debt — but the State has guaranteed it, so the risk is real."],
+   ["Per-Capita Liability","The State's total debt divided by its population — i.e. each resident's notional share of the debt. In Tamil Nadu it's about ₹1.28 lakh per person."]
+  ],
+  share_lines:{
+   debt:"Tamil Nadu's total debt hit ₹13.18 Lakh Crore in 2025-26 — that's ₹1.28 Lakh for every child born today.",
+   hidden:"Tamil Nadu's real debt exposure is ₹13.18 Lakh Crore once hidden power & transport company debt is counted.",
+   child:"Every child born in Tamil Nadu today already carries ₹1.28 Lakh in state debt — before earning a single rupee.",
+   tangedco:"Tamil Nadu's electricity board alone has ₹2.47 Lakh Crore in debt and ₹1.82 Lakh Crore in losses.",
+   perday:"Tamil Nadu pays about ₹184 Crore EVERY DAY just in interest on old loans (₹67,050 Cr a year).",
+   child2:"Every child born in Tamil Nadu today carries ₹1.28 Lakh in state debt from birth.",
+   schools:"Tamil Nadu spent more on loan interest (₹67,050 Cr) than on roads, hospitals and schools combined (₹50,911 Cr).",
+   central:"Tamil Nadu's share of central taxes fell from 6.64% to 4.097% — roughly a 38% cut."
+  },
+  share_src:"Source: Tamil Nadu White Paper, June 2026",
+  share_read:"Read the full dashboard:",
+  persona:{
+   farmer:[
+     "This year Tamil Nadu paid <b>₹67,050 crore</b> in interest on past loans — more than it spent building new roads, hospitals, schools and other capital assets combined (<b>₹50,911 crore</b>).",
+     "By letting capital spending slip, the State gave up about <b>₹28,217 crore</b> of investment over three years — what the document equates to 1,000 km of four-lane expressway.",
+     "The State's own-tax effort fell from <b>5.93% to 5.45% of GSDP</b> even as total debt rose to <b>₹10 lakh crore</b>."
+   ],
+   parent:[
+     "Every child born in Tamil Nadu today already carries about <b>₹1.28 lakh</b> in State debt.",
+     "The <b>₹28,217 crore</b> of capital investment the State gave up over three years is, in the document's own words, about <b>2,000 secondary school buildings</b> or <b>30 multi-specialty hospitals</b>.",
+     "Spending on new schools, hospitals and roads (<b>₹50,911 crore</b>) is now less than the interest paid on old loans (<b>₹67,050 crore</b>)."
+   ],
+   student:[
+     "Interest on old loans (<b>₹67,050 crore</b>) now exceeds all spending on new schools, colleges and hospitals (<b>₹50,911 crore</b>).",
+     "Committed bills — salaries, pensions and interest — already take about <b>64 paise</b> of every ₹1 the government earns.",
+     "Tamil Nadu's debt has almost doubled in five years — from <b>₹5.13 lakh crore to ₹10 lakh crore</b>."
+   ],
+   worker:[
+     "Each resident's share of the State's debt is about <b>₹1.28 lakh</b>.",
+     "The State power companies (TANGEDCO group) owe <b>₹2.47 lakh crore</b>, with accumulated losses of <b>₹1.82 lakh crore</b> — a risk that ultimately rests on the State.",
+     "Government revenue fell from about <b>10% to 8.32% of GSDP</b> — relatively less to spend on the public services you use."
+   ],
+   senior:[
+     "Tamil Nadu's elderly population is projected to rise from <b>10.6% (2011) to 18.2% (2031)</b>.",
+     "The old-age dependency ratio is set to climb from <b>20.6 (2021) to 32.7 (2036)</b> — fewer workers supporting more retirees.",
+     "The working-age share is projected to fall from about <b>66.4% (2021) to 63.6% (2036)</b>, shrinking the tax base that funds pensions and care."
+   ]
+  }
+ },
+
+ ta:{
+  lc:" லட்சம் கோடி", lakh:" லட்சம்", lc_short:"லட்சம் கோடி", lakh_w:"லட்சம்", crore:"கோடி", per_day:" / நாள்", share:"பகிர்",
+  nav_home:"முகப்பு", nav_you:"உங்களுக்கு", nav_debt:"கடன்", nav_rupee:"உங்கள் ₹1", nav_types:"கடன் வகைகள்",
+  nav_gap:"இடைவெளி", nav_states:"மாநிலங்கள்", nav_power:"மின்சாரம்", nav_impact:"தாக்கம்", nav_future:"முன்னோக்கு", nav_glossary:"சொற்கள்",
+  hero_h1a:"உங்கள் ", hero_h1b:"பணம்", hero_h1c:" எங்கே போனது?",
+  hero_sub:"தமிழ்நாட்டின் நிதிநிலை — எளிமையாக விளக்கப்பட்டது.",
+  hero_s1_label:"மொத்த அரசாங்கக் கடன்",
+  hero_s1_exp:"மாநிலம் இன்று நேரடியாகச் சுமக்கும் கடன் — 5 ஆண்டுகளுக்கு முன் ₹5.13 லட்சம் கோடியாக இருந்தது. கிட்டத்தட்ட இரட்டிப்பாகிவிட்டது.",
+  hero_s2_label:"மறைமுகக் கடனுடன் சேர்த்து",
+  hero_s2_exp:"அரசு உத்தரவாதம் அளித்துள்ள மின்சாரம், போக்குவரத்து, பொருள் வழங்கல் நிறுவனங்களின் கடனையும் சேர்த்தால், உண்மையான சுமை ₹13.18 லட்சம் கோடியாக உயர்கிறது.",
+  hero_s3_label:"இன்று பிறக்கும் ஒவ்வொரு குழந்தையும் இதைச் சுமக்கிறது",
+  hero_s3_exp:"மாநிலக் கடனை ஒவ்வொரு குடிமகனுக்கும் பிரித்தால், ஒரு ரூபாய் சம்பாதிக்கும் முன்பே ஒவ்வொருவரும் ₹1.28 லட்சம் சுமக்கிறார்.",
+  pz_eyebrow:"உங்களுக்கேற்ப", pz_title:"இது எனக்கு என்ன அர்த்தம்?",
+  pz_lead:"நீங்கள் யார் என்பதைத் தேர்ந்தெடுத்து மாநில நிதிநிலையை உங்கள் கண்ணோட்டத்தில் பாருங்கள்.",
+  pz_who:"நீங்கள் யார்?",
+  pz_note:"📄 கீழே உள்ள ஒவ்வொரு எண்ணும் தமிழ்நாடு மாநில நிதி வெள்ளை அறிக்கையிலிருந்து நேரடியாக எடுக்கப்பட்டது.",
+  persona_student:"மாணவர்", persona_worker:"பணிபுரிபவர்", persona_farmer:"விவசாயி", persona_senior:"முதியவர்", persona_parent:"பெற்றோர்",
+  debt_eyebrow:"பெரிய சித்திரம்", debt_title:"தமிழ்நாட்டின் கடன் எவ்வளவு வேகமாக வளர்ந்தது?",
+  debt_lead:"ஐந்து ஆண்டுகளில் மாநிலக் கடன் கிட்டத்தட்ட இரட்டிப்பானது — ₹5.13 லட்சம் கோடியிலிருந்து ₹10 லட்சம் கோடிக்கு. பொருளாதாரத்தின் (GSDP) பங்காக, இது எப்போதும் பாதுகாப்பான வரம்பைத் தாண்டியே நிற்கிறது.",
+  debt_ct:"கடன் தொகை & கடன்-GSDP விகிதம், 2020-21 முதல் 2025-26 வரை",
+  debt_cs:"பட்டைகள் = ₹ லட்சம் கோடியில் மொத்தக் கடன் · கோடு = பொருளாதாரத்தின் (GSDP) % ஆக கடன்",
+  debt_annot:"சிவப்புக் கோடு <b>25% \"ஆபத்து மண்டலம்\"</b> — தமிழ்நாட்டின் சொந்த நிதிப் பொறுப்புச் சட்டம் நிர்ணயித்த உச்சவரம்பு. மாநிலம் ஒவ்வொரு ஆண்டும் அதைத் தாண்டியே உள்ளது.",
+  ds_debt:"மொத்தக் கடன் (₹ லட்சம் கோடி)", ds_gsdp:"GSDP-இல் % ஆக கடன்", ds_danger:"ஆபத்து மண்டலம் (GSDP-இல் 25%)",
+  gsdp_eyebrow:"எளிய சொற்களில்", gsdp_title:"\"GSDP-இல் 28.3%\" என்றால் என்ன?",
+  gsdp_lead:"GSDP என்பது தமிழ்நாடு ஒரு ஆண்டில் உற்பத்தி செய்யும் அனைத்தும் — மொத்தப் பொருளாதாரத்தின் அளவு. அதில் 28.3% கடன்பட்டிருப்பது இப்படி:",
+  gsdp_if:"தமிழ்நாட்டின் முழுப் பொருளாதாரமும் ₹100 என்றால்…",
+  gsdp_owed:"ஒவ்வொரு ₹100-இலும் இந்த அளவு ஏற்கனவே கடனாக உள்ளது. மேலே உள்ள ஆரஞ்சு நாணயங்கள் கடன் பகுதி.",
+  gsdp_ct:"தமிழ்நாடு எப்படி ஒப்பிடுகிறது (GSDP-இல் % ஆக கடன், 2025-26)",
+  gsdp_cs:"குறைவானது ஆரோக்கியமானது. இந்தக் குழுவிலேயே தமிழ்நாடு அதிக கடன் சுமை கொண்டது.",
+  ru_eyebrow:"மிக முக்கியமான விளக்கப்படம்", ru_title:"அரசு சம்பாதிக்கும் ஒவ்வொரு ₹1-க்கும், அது எங்கே செல்கிறது",
+  ru_lead:"ஒவ்வொரு பகுதியையும் தொட்டுப் பாருங்கள். புதிதாக எதையும் செலவிட முடிவெடுப்பதற்கு முன்பே, ஒவ்வொரு ரூபாயின் பெரும்பகுதி ஏற்கனவே ஒதுக்கப்பட்டுவிட்டது.",
+  ru_coin:"சம்பாதித்தது", ru_info:"ஒவ்வொரு ₹1-இலும் 87 பைசா பட்ஜெட் தொடங்குவதற்கு முன்பே பூட்டப்படுகிறது",
+  ru_alarm_h:"எச்சரிக்கை மணி: பழைய கடன்களைச் செலுத்துவது இப்போது எதிர்காலத்தைக் கட்டியெழுப்புவதை விட அதிக செலவாகிறது.",
+  ru_alarm_b:"வட்டிச் செலுத்துதல் <b>(₹67,050 கோடி)</b> இப்போது புதிய சாலைகள், மருத்துவமனைகள், பள்ளிகள் அனைத்துக்கும் சேர்த்த செலவை <b>(₹50,911 கோடி)</b> <b>மிஞ்சுகிறது</b>.",
+  ru_int:"கடன் வட்டி", ru_cap:"கட்டமைப்பு (மூலதனம்)",
+  ru_start_nm:"ஏதேனும் ஒரு பகுதியை அல்லது பொத்தானைத் தொடவும்", ru_start_ds:"ரூபாயின் ஒவ்வொரு பகுதியும் எளிய வாக்கியத்தில் விளக்கப்படுகிறது. ஆரஞ்சு பகுதியுடன் தொடங்குங்கள் — பழைய கடன்களுக்கான வட்டி.",
+  seg_sal_n:"சம்பளம்", seg_sal_d:"மாநிலத்தின் ஆசிரியர்கள், மருத்துவர்கள், காவலர்கள் மற்றும் லட்சக்கணக்கான அரசு ஊழியர்களுக்கான ஊதியம். தவிர்க்க முடியாதது, ஒவ்வொரு ஆண்டும் உயர்கிறது.",
+  seg_int_n:"பழைய கடனுக்கான வட்டி", seg_int_d:"முன்பு வாங்கிய பணத்துக்கான வட்டி மட்டுமே — புதிதாக எதையும் வாங்காது, ஆனாலும் இதுவே வேகமாக வளரும் செலவு.",
+  seg_pen_n:"ஓய்வூதியம்", seg_pen_d:"ஓய்வுபெற்ற அரசு ஊழியர்களுக்கான கொடுப்பனவு. நிறைவேற்ற வேண்டிய வாக்குறுதி, ஓய்வுபெறுபவர்கள் அதிகரிக்க இதுவும் வளர்கிறது.",
+  seg_oth_n:"பிற நிலையான செலவுகள்", seg_oth_d:"உள்ளாட்சி அமைப்புகளுக்கான மானியங்கள், மத்திய திட்டங்களில் மாநிலத்தின் கட்டாயப் பங்கு, பேரிடர் நிதி போன்ற சட்டப்படி தவிர்க்க முடியாத செலவுகள்.",
+  seg_left_n:"மற்ற அனைத்துக்கும் மீதம்", seg_left_d:"நலத்திட்டங்கள் மற்றும் புதிய சாலைகள், மருத்துவமனைகள், பள்ளிகள் கட்டுவது அனைத்துக்கும் மீதமுள்ளது இதுவே. முழு எதிர்காலமும் வெறும் 13 பைசாவில் அடைக்கப்படுகிறது.",
+  paise_of:"பைசா", of_every:"ஒவ்வொரு ₹1-இல் ·",
+  gd_eyebrow:"கடனைப் புரிந்துகொள்வோம்", gd_title:"எல்லாக் கடனும் ஒன்றல்ல — ஆபத்தானது இதுதான்",
+  gd_lead:"கடன் எதற்காகப் பயன்படுத்தப்படுகிறது என்பதைப் பொறுத்து அது நல்லதாகவோ ஆபத்தானதாகவோ இருக்கலாம். நாணயத்தை மூன்று கட்டங்களிலும் பின்தொடருங்கள்.",
+  gd_p1_l:"கட்டியெழுப்ப கடன்", gd_p1_e:"நெடுஞ்சாலைகள், மருத்துவமனைகள், பள்ளிகள்", gd_p1_s:"இந்தக் கடன் வளர்ச்சி மூலம் தன்னைத்தானே திருப்பிச் செலுத்துகிறது",
+  gd_p2_l:"நடத்த கடன்", gd_p2_e:"சம்பளம், அன்றாடச் செலவுகள்", gd_p2_s:"எதுவும் கட்டப்படவில்லை. ஆனாலும் கட்டணம் வரும்.",
+  gd_p3_l:"வட்டி கட்ட கடன்", gd_p3_e:"பழைய கடன் வட்டியைக் கட்ட புதிய கடன்", gd_p3_s:"தமிழ்நாடு இப்போது இங்குதான் உள்ளது",
+  gd_callout:"2025-26-இல், தமிழ்நாடு <b>₹67,050 கோடி</b> வட்டியாகச் செலுத்தியது — சாலைகள், மருத்துவமனைகள், பள்ளிகள் அனைத்துக்கும் சேர்த்த செலவை (<b>₹50,911 கோடி</b>) விட அதிகம். அரசு இப்போது வளர்வதற்காக அல்ல, பிழைப்பதற்காகவே கடன் வாங்குகிறது.",
+  gap_eyebrow:"வருமானத்தைத் தாண்டிய செலவு", gap_title:"தமிழ்நாடு சம்பாதிப்பதை விட அதிகம் செலவிடுகிறது — ஒவ்வொரு ஆண்டும்",
+  gap_lead:"அரசு பெறுவதற்கும் செலவிடுவதற்கும் இடையிலான இடைவெளி வளர்ந்துகொண்டே வருகிறது. அந்த இடைவெளி புதிய கடன் மூலம் நிரப்பப்படுகிறது.",
+  gap_ct:"அரசு சம்பாதிப்பது vs செலவிடுவது (₹ லட்சம் கோடி)", gap_cs:"பச்சை = மொத்த வருமானம் · ஆரஞ்சு = மொத்தச் செலவு",
+  gap_annot:"2025-26-இல் அரசு சம்பாதித்ததை விட <b>₹1.33 லட்சம் கோடி</b> அதிகம் செலவிட்டது. <b>இந்த இடைவெளி கடன் மூலம் நிரப்பப்படுகிறது</b> — அதனால்தான் கடன் தொடர்ந்து உயர்கிறது.",
+  gap_house:"<b>ஒரு குடும்பமாக நினைத்துப் பாருங்கள்:</b> மாநிலம் மாதம் ₹10,000 சம்பாதிக்கும் குடும்பமாக இருந்தால், அது சுமார் ₹14,500 செலவிடும் — மீதமுள்ள ₹4,500-ஐ ஒவ்வொரு மாதமும் கடன் வாங்கும்.",
+  ds_earn:"சம்பாதிப்பது", ds_spend:"செலவிடுவது",
+  cmp_eyebrow:"அண்டை மாநிலங்கள்", cmp_title:"தமிழ்நாடு ஒத்த மாநிலங்களுடன் எப்படி ஒப்பிடுகிறது?",
+  cmp_lead:"கர்நாடகா, மகாராஷ்டிரா, குஜராத் ஆகியவற்றுடன் ஒப்பிடும்போது, நிதி ஆரோக்கியத்தின் ஒவ்வொரு அளவீட்டிலும் தமிழ்நாடு அதிக சுமையில் உள்ளது. தமிழ்நாடு ஆரஞ்சு நிறத்தில் காட்டப்பட்டுள்ளது.",
+  cmp_debt_t:"GSDP-இல் % ஆக கடன்", cmp_debt_s:"பொருளாதாரத்தை விட எவ்வளவு கடன் — குறைவானது ஆரோக்கியம்",
+  cmp_fis_t:"GSDP-இல் % ஆக நிதிப் பற்றாக்குறை", cmp_fis_s:"ஆண்டுதோறும் அதிகச் செலவு — 3% கோடு சட்ட வரம்பு",
+  cmp_rev_t:"GSDP-இல் % ஆக வருவாய்ப் பற்றாக்குறை", cmp_rev_s:"அன்றாட நடத்தைச் செலவில் பற்றாக்குறை — கூட்டல் என்றால் உபரி",
+  cmp_int_t:"வருமானத்தில் % ஆக வட்டி", cmp_int_s:"மற்ற எதற்கும் முன் வட்டி உண்ணும் வருமானப் பங்கு",
+  tg_eyebrow:"நெருக்கடிக்குள் ஒரு நெருக்கடி", tg_title:"மின்வாரியத்தின் மறைந்த கடன் மலை",
+  tg_h:"TANGEDCO / TNEB குழுமம் (மாநில மின் நிறுவனங்கள்)",
+  tg_p:"இந்தக் கடன் தலைப்புச் செய்தி அரசாங்கக் கடனுக்கு <b>வெளியே</b> உள்ளது — ஆனால் நிறுவனங்களால் செலுத்த முடியாவிட்டால், மாநிலம் செலுத்த வேண்டும்.",
+  tg_n1:"மொத்தக் கடன்", tg_n2:"திரண்ட நட்டங்கள்",
+  tg_plain:"<b>எளிமையாகச் சொன்னால்:</b> மின்வாரியம் மட்டுமே பல நாடுகளின் முழு ஆண்டு பட்ஜெட்டை விட அதிகம் கடன்பட்டுள்ளது — ஒவ்வொரு மாதமும் சுமார் <b>₹2,500 கோடி</b> பற்றாக்குறையுடன் நட்டத்தில் இயங்குகிறது; அரசு அதைத் தொடர்ந்து நிரப்புகிறது (2025-26-இல் மட்டும் ₹33,478 கோடி உதவி).",
+  tg_where:"₹2.47 லட்சம் கோடி கடன் எங்கே உள்ளது:",
+  tg_r1:"TNPDCL — பகிர்மானம்", tg_r2:"TNPGCL — உற்பத்தி", tg_r3:"TANTRANSCO — கடத்துதல்", tg_r4:"TNGECL — பசுமை ஆற்றல்",
+  im_eyebrow:"நம் வாழ்வில்", im_title:"இது உங்களுக்கு என்ன அர்த்தம்",
+  im_lead:"எண்கள் மிகப் பெரியவை, புரியாதவை. அன்றாட வாழ்வில் அவை எப்படி இருக்கும் என்பது இதோ.",
+  im_c1:"பழைய கடன்களுக்கான வட்டியாக மட்டுமே தமிழ்நாடு ஒவ்வொரு நாளும் செலுத்தும் தொகை இது (ஆண்டுக்கு ₹67,050 கோடி).",
+  im_c2:"இன்று பிறக்கும் ஒவ்வொரு குழந்தையும், எதையும் சம்பாதிக்கும் முன்பே சுமக்கும் மாநிலக் கடன் பங்கு.",
+  im_c3v:"பள்ளிகள் < வட்டி", im_c3:"புதிய பள்ளிகள், மருத்துவமனைகள், சாலைகளுக்கான செலவு (₹50,911 கோடி) இப்போது வட்டிச் செலவை (₹67,050 கோடி) விடக் குறைவு.",
+  im_c4:"தமிழ்நாட்டின் மத்திய வரிப் பங்கு ஆண்டுகளாகச் சுருங்கியுள்ளது — சுமார் 38% குறைப்பு — வேலை செய்ய குறைவான பணமே மிஞ்சுகிறது.",
+  fc_eyebrow:"நாம் எங்கே செல்கிறோம்?", fc_title:"எதுவும் மாறாவிட்டால்…",
+  fc_lead:"வெள்ளை அறிக்கையின் சொந்தக் கணிப்புகள் தமிழ்நாடு வேகமாக வயதாவதைக் காட்டுகின்றன — உயரும் கடனை குறைவான தொழிலாளர்களே சுமக்க வேண்டியிருக்கும். இதுவே கடன் வலையின் தொடக்கம் என்று அது எச்சரிக்கிறது.",
+  fc_tag:"📄 இவை வெள்ளை அறிக்கையின் சொந்த மக்கள்தொகைக் கணிப்புகள்",
+  fc_c1v:"10.6% → 18.2%", fc_c1:"மக்கள்தொகையில் முதியோர் பங்கு, 2011 முதல் 2031 வரை உயர்கிறது — பெரிய மாநிலங்களிலேயே மிக விரைவானது.",
+  fc_c2v:"20.6 → 32.7", fc_c2:"முதியோர் சார்பு விகிதம், 2021 முதல் 2036 வரை உயர்கிறது — அதிக ஓய்வுபெற்றோரை குறைவான வேலை வயதினர் தாங்குகிறார்கள்.",
+  fc_c3v:"66.4% → 63.6%", fc_c3:"மக்கள்தொகையில் வேலை வயது பங்கு, 2021 முதல் 2036 வரை சுருங்குகிறது — செலவுகள் உயரும்போதே வரி அடித்தளம் குறுகுகிறது.",
+  gl_eyebrow:"சொற்கள் விளக்கம்", gl_title:"சொற்களஞ்சியம் — தொட்டு விரிவாக்கவும்", gl_lead:"ஒவ்வொரு சொல்லும் எளிய தமிழில், நிதிப் பட்டம் தேவையில்லை.",
+  ft_src:"தரவு ஆதாரம்: தமிழ்நாடு அரசு மாநில நிதி நிலை வெள்ளை அறிக்கை, ஜூன் 2026.",
+  ft_link:"📄 அதிகாரப்பூர்வ வெள்ளை அறிக்கையைப் படிக்க (PDF)",
+  ft_note:"இந்தப் பலகை பொதுக் கல்விக்காக. அனைத்து எண்களும் அதிகாரப்பூர்வ ஆவணத்திலிருந்து எடுக்கப்பட்டவை.",
+  st_TN:"தமிழ்நாடு", st_KA:"கர்நாடகா", st_MH:"மகாராஷ்டிரா", st_GJ:"குஜராத்",
+  copied:"நகலெடுக்கப்பட்டது!",
+  glossary:[
+   ["GSDP (மொத்த மாநில உள்நாட்டு உற்பத்தி)","தமிழ்நாடு ஒரு ஆண்டில் உற்பத்தி செய்யும் அனைத்தின் மொத்த மதிப்பு — மொத்தப் பொருளாதாரத்தின் அளவு. கடன் சமாளிக்கக்கூடியதா என்பதை இதனுடன் ஒப்பிட்டே பார்க்கப்படுகிறது."],
+   ["நிதிப் பற்றாக்குறை (Fiscal Deficit)","ஒரு ஆண்டில் அரசு செலவிடுவதற்கும் சம்பாதிப்பதற்கும் இடையிலான மொத்த இடைவெளி. இது முழுவதும் கடன் மூலம் நிரப்பப்படுவதால் நேரடியாகக் கடனை அதிகரிக்கிறது."],
+   ["வருவாய்ப் பற்றாக்குறை (Revenue Deficit)","அன்றாட நடத்தைச் செலவுகளில் (சம்பளம், ஓய்வூதியம், வட்டி) மட்டும் ஏற்படும் பற்றாக்குறை — அதாவது கட்டுமானத்துக்கு மட்டுமல்ல, வழக்கமான செலவுகளுக்கும் மாநிலம் கடன் வாங்குகிறது. அன்றாடச் செலவுக்குக் கடன் வாங்குவது எச்சரிக்கை அறிகுறி."],
+   ["மூலதனச் செலவு (Capital Expenditure)","நிலையான சொத்துகளைக் கட்டுவதற்கான செலவு — சாலைகள், மருத்துவமனைகள், பள்ளிகள், மின் கோடுகள். எதிர்கால மதிப்பை உருவாக்கும் 'நல்ல' செலவு இது, இது சுருக்கப்படுகிறது."],
+   ["கட்டாயச் செலவு (Committed Expenditure)","அரசுக்கு வேறு வழியில்லாத செலவு: சம்பளம், ஓய்வூதியம், வட்டி. தமிழ்நாட்டில் இது ஏற்கனவே ஒவ்வொரு ரூபாயிலும் சுமார் 64 பைசாவை உண்கிறது."],
+   ["பட்ஜெட்டுக்கு வெளியே / மறைமுகக் கடன்","அரசு நேரடியாக அல்லாமல், மாநில நிறுவனங்கள் (மின்வாரியம் போன்றவை) வாங்கும் கடன். இது தலைப்புச் செய்திக் கடனில் தெரியாது — ஆனால் அரசு உத்தரவாதம் அளித்துள்ளதால் ஆபத்து உண்மையானது."],
+   ["தனிநபர் கடன் சுமை (Per-Capita Liability)","மாநிலத்தின் மொத்தக் கடனை மக்கள்தொகையால் வகுத்தது — அதாவது ஒவ்வொரு குடிமகனின் கடன் பங்கு. தமிழ்நாட்டில் இது ஒருவருக்கு சுமார் ₹1.28 லட்சம்."]
+  ],
+  share_lines:{
+   debt:"தமிழ்நாட்டின் மொத்தக் கடன் 2025-26-இல் ₹13.18 லட்சம் கோடியை எட்டியது — இன்று பிறக்கும் ஒவ்வொரு குழந்தைக்கும் ₹1.28 லட்சம்.",
+   hidden:"மறைந்த மின் & போக்குவரத்து நிறுவனக் கடனைச் சேர்த்தால் தமிழ்நாட்டின் உண்மையான கடன் சுமை ₹13.18 லட்சம் கோடி.",
+   child:"இன்று தமிழ்நாட்டில் பிறக்கும் ஒவ்வொரு குழந்தையும் — ஒரு ரூபாய் சம்பாதிக்கும் முன்பே — ₹1.28 லட்சம் மாநிலக் கடன் சுமக்கிறது.",
+   tangedco:"தமிழ்நாட்டின் மின்வாரியம் மட்டுமே ₹2.47 லட்சம் கோடி கடனும் ₹1.82 லட்சம் கோடி நட்டமும் கொண்டது.",
+   perday:"பழைய கடன்களுக்கான வட்டியாக மட்டுமே தமிழ்நாடு ஒவ்வொரு நாளும் சுமார் ₹184 கோடி செலுத்துகிறது (ஆண்டுக்கு ₹67,050 கோடி).",
+   child2:"இன்று தமிழ்நாட்டில் பிறக்கும் ஒவ்வொரு குழந்தையும் பிறப்பிலிருந்தே ₹1.28 லட்சம் மாநிலக் கடன் சுமக்கிறது.",
+   schools:"தமிழ்நாடு சாலைகள், மருத்துவமனைகள், பள்ளிகள் அனைத்துக்கும் சேர்த்த செலவை (₹50,911 கோடி) விட கடன் வட்டிக்கே (₹67,050 கோடி) அதிகம் செலவிட்டது.",
+   central:"தமிழ்நாட்டின் மத்திய வரிப் பங்கு 6.64%-இலிருந்து 4.097%-ஆகக் குறைந்தது — சுமார் 38% குறைப்பு."
+  },
+  share_src:"ஆதாரம்: தமிழ்நாடு வெள்ளை அறிக்கை, ஜூன் 2026",
+  share_read:"முழுப் பலகையைப் படிக்க:",
+  persona:{
+   farmer:[
+     "இந்த ஆண்டு தமிழ்நாடு பழைய கடன்களுக்கான வட்டியாக <b>₹67,050 கோடி</b> செலுத்தியது — புதிய சாலைகள், மருத்துவமனைகள், பள்ளிகள் உள்ளிட்ட மூலதனச் சொத்துகள் அனைத்துக்கும் சேர்த்த செலவை (<b>₹50,911 கோடி</b>) விட அதிகம்.",
+     "மூலதனச் செலவைக் குறைத்ததால், மாநிலம் மூன்று ஆண்டுகளில் சுமார் <b>₹28,217 கோடி</b> முதலீட்டை இழந்தது — ஆவணத்தின்படி இது சுமார் 1,000 கி.மீ நான்கு வழிச்சாலைக்கு சமம்.",
+     "மொத்தக் கடன் <b>₹10 லட்சம் கோடிக்கு</b> உயர்ந்தபோதும், மாநிலத்தின் சொந்த வரி முயற்சி <b>5.93%-இலிருந்து 5.45% GSDP-ஆகக்</b> குறைந்தது."
+   ],
+   parent:[
+     "இன்று தமிழ்நாட்டில் பிறக்கும் ஒவ்வொரு குழந்தையும் ஏற்கனவே சுமார் <b>₹1.28 லட்சம்</b> மாநிலக் கடன் சுமக்கிறது.",
+     "மாநிலம் மூன்று ஆண்டுகளில் இழந்த <b>₹28,217 கோடி</b> மூலதன முதலீடு, ஆவணத்தின் சொந்த வார்த்தைகளில், சுமார் <b>2,000 மேல்நிலைப் பள்ளிக் கட்டடங்கள்</b> அல்லது <b>30 பல்நோக்கு மருத்துவமனைகள்</b>.",
+     "புதிய பள்ளிகள், மருத்துவமனைகள், சாலைகளுக்கான செலவு (<b>₹50,911 கோடி</b>) இப்போது பழைய கடன்களுக்கான வட்டியை (<b>₹67,050 கோடி</b>) விடக் குறைவு."
+   ],
+   student:[
+     "பழைய கடன்களுக்கான வட்டி (<b>₹67,050 கோடி</b>) இப்போது புதிய பள்ளிகள், கல்லூரிகள், மருத்துவமனைகள் அனைத்துக்கும் சேர்த்த செலவை (<b>₹50,911 கோடி</b>) மிஞ்சுகிறது.",
+     "கட்டாயச் செலவுகள் — சம்பளம், ஓய்வூதியம், வட்டி — ஏற்கனவே அரசு சம்பாதிக்கும் ஒவ்வொரு ₹1-இல் சுமார் <b>64 பைசாவை</b> எடுக்கின்றன.",
+     "தமிழ்நாட்டின் கடன் ஐந்து ஆண்டுகளில் கிட்டத்தட்ட இரட்டிப்பானது — <b>₹5.13 லட்சம் கோடியிலிருந்து ₹10 லட்சம் கோடிக்கு</b>."
+   ],
+   worker:[
+     "ஒவ்வொரு குடிமகனின் மாநிலக் கடன் பங்கு சுமார் <b>₹1.28 லட்சம்</b>.",
+     "மாநில மின் நிறுவனங்கள் (TANGEDCO குழுமம்) <b>₹2.47 லட்சம் கோடி</b> கடனும், <b>₹1.82 லட்சம் கோடி</b> திரண்ட நட்டமும் கொண்டுள்ளன — இறுதியில் இந்த ஆபத்து மாநிலத்தின் மீதே.",
+     "அரசின் வருமானம் சுமார் <b>10%-இலிருந்து 8.32% GSDP-ஆகக்</b> குறைந்தது — நீங்கள் பயன்படுத்தும் பொதுச் சேவைகளுக்கு ஒப்பீட்டளவில் குறைவான பணமே."
+   ],
+   senior:[
+     "தமிழ்நாட்டின் முதியோர் மக்கள்தொகை <b>10.6% (2011)-இலிருந்து 18.2% (2031)-ஆக</b> உயரும் என்று கணிக்கப்படுகிறது.",
+     "முதியோர் சார்பு விகிதம் <b>20.6 (2021)-இலிருந்து 32.7 (2036)-ஆக</b> உயரும் — அதிக ஓய்வுபெற்றோரை குறைவான தொழிலாளர்கள் தாங்குகிறார்கள்.",
+     "வேலை வயது பங்கு சுமார் <b>66.4% (2021)-இலிருந்து 63.6% (2036)-ஆகக்</b> குறையும் — ஓய்வூதியம், சுகாதாரத்துக்கு நிதி அளிக்கும் வரி அடித்தளம் குறுகுகிறது."
+   ]
+  }
+ }
+};
+
+/* =========================================================================
+   3) THEME + helpers
+   ========================================================================= */
+let LANG = (localStorage.getItem("tnlang")==="ta") ? "ta" : "en";
+const REDUCE = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const t = k => (I18N[LANG] && I18N[LANG][k]!==undefined) ? I18N[LANG][k] : (I18N.en[k]!==undefined?I18N.en[k]:k);
+
+const C = {text:"#15181D", muted:"#5B6573", grid:"#E6E9ED", accent:"#FF6B35", gold:"#B45309",
+  green:"#15803D", neutral:"#94A3B8", danger:"#DC2626"};
+Chart.defaults.color=C.muted;
+Chart.defaults.font.family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+Chart.defaults.font.size=12;
+const tip={backgroundColor:"#15181D",titleColor:"#FFD27A",bodyColor:"#fff",borderColor:C.accent,borderWidth:1,padding:10,titleFont:{weight:"700"}};
+
+/* =========================================================================
+   4) i18n apply
+   ========================================================================= */
+function applyLang(lang){
+  LANG=lang; localStorage.setItem("tnlang",lang);
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-i18n]").forEach(el=>{ el.textContent=t(el.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-html]").forEach(el=>{ el.innerHTML=t(el.dataset.i18nHtml); });
+  document.querySelectorAll("[data-suffix-i18n]").forEach(el=>{ el.dataset.suffix=t(el.dataset.suffixI18n); });
+  document.querySelectorAll(".stat.in [data-count]").forEach(finalizeCount); // refresh number+suffix instantly
+  document.querySelectorAll(".lang-toggle button").forEach(b=>b.classList.toggle("active",b.dataset.lang===lang));
+  buildGlossary();
+  buildPersonaOptions();
+  renderPersona();
+  // rebuild any already-built charts so their labels localise
+  Object.keys(built).forEach(id=>{ if(builderMap[id]) builderMap[id](); });
+  if(built.rupee) { buildSegList(); renderSeg(currentSeg); }
+}
+
+/* =========================================================================
+   5) COUNT-UP  (with safety-net so a throttled rAF can't freeze the number,
+      and a finalize() used to refresh suffix instantly on language change)
+   ========================================================================= */
+function finalizeCount(el){
+  const target=parseFloat(el.dataset.count), dec=parseInt(el.dataset.decimals||"0",10);
+  el.textContent=(el.dataset.prefix||"")+target.toFixed(dec)+(el.dataset.suffix||"");
+}
+function countUp(el){
+  if(REDUCE){finalizeCount(el);return;}
+  const target=parseFloat(el.dataset.count), dec=parseInt(el.dataset.decimals||"0",10);
+  const pre=el.dataset.prefix||"";
+  const dur=1400,t0=performance.now();
+  (function tick(now){
+    const p=Math.min((now-t0)/dur,1), e=1-Math.pow(1-p,3);
+    el.textContent=pre+(target*e).toFixed(dec)+(el.dataset.suffix||"");
+    if(p<1) requestAnimationFrame(tick); else finalizeCount(el);
+  })(performance.now());
+  clearTimeout(el._cu); el._cu=setTimeout(()=>finalizeCount(el),dur+400); // guarantee final value
+}
+
+/* =========================================================================
+   6) 28.3% coin grid
+   ========================================================================= */
+(function(){const w=document.getElementById("ratioVis");for(let i=0;i<100;i++){const c=document.createElement("span");
+  c.style.cssText="width:20px;height:20px;border-radius:50%;border:1px solid var(--line)";
+  if(i<28) c.style.background="var(--accent)";
+  else if(i===28) c.style.background="linear-gradient(90deg,var(--accent) 30%,var(--card-2) 30%)";
+  else c.style.background="var(--card-2)";
+  w.appendChild(c);} })();
+
+/* =========================================================================
+   7) GLOSSARY
+   ========================================================================= */
+function buildGlossary(){
+  const w=document.getElementById("glossary-list"); w.innerHTML="";
+  t("glossary").forEach(([term,def])=>{
+    const d=document.createElement("details"); d.className="gl";
+    d.innerHTML=`<summary>${term}<span class="chev">+</span></summary><div class="body">${def}</div>`;
+    w.appendChild(d);
+  });
+}
+
+/* =========================================================================
+   8) PERSONALIZER
+   ========================================================================= */
+const PERSONAS=[["farmer","persona_farmer"],["parent","persona_parent"],["student","persona_student"],["worker","persona_worker"],["senior","persona_senior"]];
+function buildPersonaOptions(){
+  const ps=document.getElementById("pzPersona");
+  const curP=ps.value;
+  ps.innerHTML=PERSONAS.map(([k,key])=>`<option value="${k}">${t(key)}</option>`).join("");
+  if(curP) ps.value=curP;
+}
+function renderPersona(){
+  const persona=document.getElementById("pzPersona").value||"farmer";
+  const stmts=(I18N[LANG].persona[persona]||I18N.en.persona[persona]);
+  const box=document.getElementById("pzResult");
+  box.innerHTML=stmts.map(s=>`<div class="pz-stmt">${s}</div>`).join("");
+  const items=box.querySelectorAll(".pz-stmt");
+  items.forEach((el,i)=> setTimeout(()=>el.classList.add("show"), REDUCE?0:90*i));
+}
+
+/* =========================================================================
+   9) RUPEE donut
+   ========================================================================= */
+let currentSeg=1;
+function renderSeg(i){
+  currentSeg=i; const s=DATA.rupee[i];
+  document.getElementById("segPanel").innerHTML=
+    `<div class="nm"><span class="tag" style="background:${s.color}"></span>${t("seg_"+s.key+"_n")}</div>
+     <div class="pct">${s.paise} ${t("paise_of")} <span style="font-size:.82rem;color:var(--muted);font-weight:600">${t("of_every")} ${s.cr}</span></div>
+     <div class="ds">${t("seg_"+s.key+"_d")}</div>`;
+  document.querySelectorAll("#segList .segbtn").forEach((b,bi)=>b.classList.toggle("active",bi===i));
+}
+function buildSegList(){
+  const list=document.getElementById("segList"); list.innerHTML="";
+  DATA.rupee.forEach((s,i)=>{
+    const b=document.createElement("button"); b.className="segbtn"; b.type="button";
+    b.innerHTML=`<span class="sw" style="background:${s.color}"></span>${t("seg_"+s.key+"_n")}`;
+    b.addEventListener("click",()=>renderSeg(i));
+    list.appendChild(b);
+  });
+}
+function buildRupee(){
+  Chart.getChart("rupeeChart")?.destroy();
+  rupeeChart=new Chart(document.getElementById("rupeeChart"),{
+    type:"doughnut",
+    data:{labels:DATA.rupee.map(s=>t("seg_"+s.key+"_n")),
+      datasets:[{data:DATA.rupee.map(s=>s.paise),backgroundColor:DATA.rupee.map(s=>s.color),
+        borderColor:"#fff",borderWidth:3,hoverOffset:14,offset:DATA.rupee.map(s=>s.key==="int"?16:0)}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:"62%",
+      animation:REDUCE?false:{animateRotate:true,duration:1100},
+      plugins:{legend:{display:false},tooltip:{...tip,callbacks:{label:c=>` ${c.label}: ${c.raw} ${t("paise_of")}`}}},
+      onClick:(e,els)=>{if(els.length)renderSeg(els[0].index);}}
+  });
+}
+let rupeeChart=null;
+
+/* =========================================================================
+   10) Charts
+   ========================================================================= */
+function buildDebt(){
+  Chart.getChart("debtChart")?.destroy();
+  const d=DATA.debtTimeline;
+  new Chart(document.getElementById("debtChart"),{
+    data:{labels:d.years,datasets:[
+      {type:"bar",label:t("ds_debt"),data:d.stockLakhCr,backgroundColor:"rgba(255,107,53,.55)",borderColor:C.accent,borderWidth:1,borderRadius:6,yAxisID:"y",order:2},
+      {type:"line",label:t("ds_gsdp"),data:d.debtToGSDP,borderColor:C.gold,backgroundColor:C.gold,borderWidth:3,tension:.3,pointRadius:4,pointHoverRadius:6,yAxisID:"y1",order:1},
+      {type:"line",label:t("ds_danger"),data:d.years.map(()=>d.dangerLine),borderColor:C.danger,borderWidth:2,borderDash:[7,5],pointRadius:0,yAxisID:"y1",order:0}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,animation:REDUCE?false:{duration:1100},interaction:{mode:"index",intersect:false},
+      plugins:{legend:{labels:{boxWidth:14,padding:12,color:C.text}},
+        tooltip:{...tip,callbacks:{label:c=>c.dataset.yAxisID==="y"?` ₹${c.raw} ${LANG==="ta"?"லட்சம் கோடி":"Lakh Cr"}`:(c.datasetIndex===2?` ${c.raw}%`:` ${c.raw}%`)}}},
+      scales:{
+        y:{position:"left",title:{display:true,text:LANG==="ta"?"₹ லட்சம் கோடி":"₹ Lakh Crore",color:C.muted},grid:{color:C.grid},ticks:{color:C.muted},beginAtZero:true,suggestedMax:11},
+        y1:{position:"right",title:{display:true,text:"% GSDP",color:C.muted},grid:{drawOnChartArea:false},ticks:{color:C.muted,callback:v=>v+"%"},min:0,max:35},
+        x:{grid:{display:false},ticks:{color:C.muted}}}}
+  });
+}
+function stLabels(order){return order.map(k=>t("st_"+k));}
+function horizBar(canvasId,cfg){
+  Chart.getChart(canvasId)?.destroy();
+  const labels=stLabels(cfg.order);
+  const bg=cfg.order.map((k,i)=> k==="TN"?C.accent : (cfg.allowGreen && cfg.values[i]>0 ? C.green : C.neutral));
+  new Chart(document.getElementById(canvasId),{type:"bar",
+    data:{labels,datasets:[{data:cfg.values,backgroundColor:bg,borderRadius:6}]},
+    options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,animation:REDUCE?false:{duration:1000},
+      plugins:{legend:{display:false},tooltip:{...tip,callbacks:{label:c=>` ${c.raw}${cfg.suffix||""}`}}},
+      scales:{x:{grid:{color:C.grid},ticks:{color:C.muted,callback:v=>v+(cfg.suffix||"")},beginAtZero:true,
+        suggestedMin:cfg.values.some(v=>v<0)?Math.min(...cfg.values)-0.5:0},
+        y:{grid:{display:false},ticks:{color:C.text,font:{weight:"600"}}}}}
+  });
+}
+function buildGsdp(){ horizBar("gsdpCompare",{order:["TN","KA","MH","GJ"],values:DATA.gsdpCompare.values,suffix:"%"}); }
+function buildCompare(){
+  horizBar("cmpDebt",DATA.compare.debt);
+  horizBar("cmpFiscal",DATA.compare.fiscal);
+  horizBar("cmpRev",DATA.compare.revenue);
+  horizBar("cmpInt",DATA.compare.interest);
+}
+function buildGap(){
+  Chart.getChart("gapChart")?.destroy();
+  const g=DATA.gap;
+  new Chart(document.getElementById("gapChart"),{type:"bar",
+    data:{labels:g.years,datasets:[
+      {label:t("ds_earn"),data:g.revenue,backgroundColor:C.green,borderRadius:6},
+      {label:t("ds_spend"),data:g.spending,backgroundColor:C.accent,borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,animation:REDUCE?false:{duration:1100},
+      plugins:{legend:{labels:{boxWidth:14,padding:12,color:C.text}},
+        tooltip:{...tip,callbacks:{label:c=>` ${c.dataset.label}: ₹${c.raw} ${LANG==="ta"?"ல.கோடி":"L Cr"}`}}},
+      scales:{y:{grid:{color:C.grid},ticks:{color:C.muted,callback:v=>"₹"+v},beginAtZero:true},x:{grid:{display:false},ticks:{color:C.muted}}}}
+  });
+}
+/* =========================================================================
+   11) SHARE
+   ========================================================================= */
+function showToast(msg){const el=document.getElementById("toast");el.textContent=msg;el.classList.add("show");
+  clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("show"),2200);}
+function shareText(key){
+  const line=(I18N[LANG].share_lines[key]||I18N.en.share_lines[key]);
+  return `${line}\n\n${t("share_src")}\n${t("share_read")} ${window.location.href}`;
+}
+document.querySelectorAll("[data-sharebtn]").forEach(btn=>{
+  btn.addEventListener("click",async (e)=>{
+    e.stopPropagation();
+    const card=btn.closest("[data-share]"); const key=card?card.dataset.share:"debt";
+    const text=shareText(key);
+    if(navigator.share){ try{ await navigator.share({title:"Tamil Nadu Finances",text}); return; }catch(_){} }
+    try{ await navigator.clipboard.writeText(text); showToast(t("copied")); }
+    catch(_){ const ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();
+      try{document.execCommand("copy");showToast(t("copied"));}catch(__){} document.body.removeChild(ta); }
+  });
+});
+
+/* =========================================================================
+   12) Lazy build on scroll + nav active state
+   ========================================================================= */
+const built={};
+const builderMap={debt:buildDebt,gsdp:buildGsdp,rupee:buildRupee,gap:buildGap,compare:buildCompare};
+const io=new IntersectionObserver((ents,obs)=>{
+  ents.forEach(en=>{
+    if(!en.isIntersecting) return; const id=en.target.id;
+    if(id==="hero"){en.target.querySelectorAll("[data-stat]").forEach((s,i)=>setTimeout(()=>{s.classList.add("in");s.querySelectorAll("[data-count]").forEach(countUp);},REDUCE?0:i*170));}
+    if(builderMap[id]){ if(!built[id]){built[id]=true; builderMap[id](); if(id==="rupee"){buildSegList();renderSeg(1);}} }
+    if(id==="rupee"){en.target.querySelectorAll(".vs-fill").forEach(f=>requestAnimationFrame(()=>f.style.width=f.dataset.w+"%"));}
+    obs.unobserve(en.target);
+  });
+},{threshold:0.16});
+["hero","debt","gsdp","rupee","gap","compare"].forEach(id=>{const el=document.getElementById(id);if(el)io.observe(el);});
+
+// nav active highlight on scroll
+const navLinks=[...document.querySelectorAll(".navlinks a")];
+const navIO=new IntersectionObserver((ents)=>{
+  ents.forEach(en=>{ if(en.isIntersecting){
+    navLinks.forEach(a=>a.classList.toggle("active",a.getAttribute("href")==="#"+en.target.id));
+    // keep the active pill visible by scrolling ONLY the nav strip horizontally (never the page)
+    const active=navLinks.find(a=>a.classList.contains("active"));
+    const strip=document.querySelector(".navlinks");
+    if(active && strip){ strip.scrollLeft = active.offsetLeft - strip.clientWidth/2 + active.clientWidth/2; }
+  }});
+},{rootMargin:"-45% 0px -50% 0px"});
+document.querySelectorAll("main section").forEach(s=>navIO.observe(s));
+
+/* =========================================================================
+   13) INIT
+   ========================================================================= */
+document.querySelectorAll(".lang-toggle button").forEach(b=>b.addEventListener("click",()=>applyLang(b.dataset.lang)));
+document.getElementById("pzPersona").addEventListener("change",renderPersona);
+
+buildPersonaOptions();
+applyLang(LANG);           // sets all text + glossary + persona in chosen language
+renderPersona();
+
+window.addEventListener("load",()=>{
+  const hero=document.getElementById("hero");
+  if(hero.getBoundingClientRect().top < window.innerHeight){
+    hero.querySelectorAll("[data-stat]").forEach((s,i)=>setTimeout(()=>{s.classList.add("in");s.querySelectorAll("[data-count]").forEach(countUp);},REDUCE?0:i*170));
+  }
+});
+</script>
+</body>
+</html>
